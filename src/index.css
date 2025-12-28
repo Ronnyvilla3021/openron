@@ -1,0 +1,102 @@
+/* =====================
+   FUENTE
+   ===================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =====================
+   TAILWIND BASE
+   ===================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================
+   BASE GLOBAL
+   ===================== */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 min-h-screen;
+  }
+
+  * {
+    @apply antialiased;
+  }
+}
+
+/* =====================
+   COMPONENTS
+   ===================== */
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-white border border-neutral-200 rounded-lg p-6 shadow-sm;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply bg-neutral-100 text-neutral-700 hover:bg-neutral-200 focus:ring-2 focus:ring-neutral-400 active:scale-[0.98];
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all;
+  }
+
+  .input-error {
+    @apply border-error-500 focus:ring-error-500 focus:border-error-500;
+  }
+
+  /* Forms */
+  .form-group {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700;
+  }
+
+  .form-error {
+    @apply text-sm text-error-600 mt-1;
+  }
+
+  .form-help {
+    @apply text-sm text-neutral-500 mt-1;
+  }
+
+  /* Alert */
+  .alert {
+    @apply flex items-start gap-3 p-4 rounded-lg border;
+  }
+}
+
+/* =====================
+   UTILITIES
+   ===================== */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
