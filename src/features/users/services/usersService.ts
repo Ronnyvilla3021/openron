@@ -3,30 +3,61 @@ import client from "@/services/api/client/client";
 import { endpoints } from "@/services/api/endpoints/endpoints";
 import type { User, UserStatus } from "../types/user.types";
 
-// Mapear de frontend a backend
+// =================== MAPEO DE DATOS ===================
+const mapUserFromBackend = (backendUser: any): User => {
+  console.log('📦 Usuario recibido del backend:', backendUser);
+  
+  return {
+    id: backendUser.idUsuario?.toString() || backendUser.id?.toString() || '',
+    fullName: backendUser.nameUsers || backendUser.nombre || '',
+    email: backendUser.emailUser || backendUser.email || '',
+    phone: backendUser.phoneUser || backendUser.telefono || '',
+    status: mapStatusFromBackend(backendUser.estado || backendUser.status),
+    createdAt: backendUser.createdAt || backendUser.fechaCreacion || new Date().toISOString(),
+  };
+};
+
 const mapUserToBackend = (user: Omit<User, 'id' | 'createdAt'>) => ({
   nameUsers: user.fullName,
   emailUser: user.email,
   phoneUser: user.phone || '',
-  userName: user.email.split('@')[0], // Generar username del email
-  passwordUser: 'Temporal123!', // Contraseña temporal - necesitarías manejar esto mejor
-  estado: user.status,
+  userName: user.email.split('@')[0],
+  passwordUser: 'Temporal123!', // ⚠️ Contraseña temporal
+  estado: mapStatusToBackend(user.status),
 });
 
-const mapUserFromBackend = (backendUser: any): User => ({
-  id: backendUser.id?.toString() || backendUser.idUsuario?.toString() || '',
-  fullName: backendUser.nameUsers || backendUser.nombre || '',
-  email: backendUser.emailUser || backendUser.email || '',
-  phone: backendUser.phoneUser || backendUser.telefono || '',
-  status: backendUser.estado || backendUser.status || 'active',
-  createdAt: backendUser.createdAt || backendUser.fechaCreacion || new Date().toISOString(),
-});
+const mapStatusFromBackend = (status: string): UserStatus => {
+  const statusMap: Record<string, UserStatus> = {
+    'activo': 'active',
+    'active': 'active',
+    'inactivo': 'inactive',
+    'inactive': 'inactive',
+    'bloqueado': 'blocked',
+    'blocked': 'blocked',
+  };
+  return statusMap[status.toLowerCase()] || 'active';
+};
 
+const mapStatusToBackend = (status: UserStatus): string => {
+  const statusMap: Record<UserStatus, string> = {
+    'active': 'activo',
+    'inactive': 'inactivo',
+    'blocked': 'bloqueado',
+  };
+  return statusMap[status];
+};
+
+// =================== SERVICIO ===================
 export const usersService = {
   getAll: async (): Promise<User[]> => {
-    const { data } = await client.get(`${endpoints.users}/lista`);
-    // Mapear datos del backend al frontend
-    return Array.isArray(data) ? data.map(mapUserFromBackend) : [];
+    try {
+      const { data } = await client.get(endpoints.usersList);
+      console.log('📥 Usuarios recibidos:', data);
+      return Array.isArray(data) ? data.map(mapUserFromBackend) : [];
+    } catch (error) {
+      console.error('❌ Error obteniendo usuarios:', error);
+      return [];
+    }
   },
 
   getById: async (id: string): Promise<User> => {
@@ -36,8 +67,9 @@ export const usersService = {
 
   createUser: async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
     const backendUser = mapUserToBackend(user);
-    const { data } = await client.post(`${endpoints.users}/crear`, backendUser);
-    return mapUserFromBackend(data);
+    console.log('📤 Creando usuario:', backendUser);
+    const { data } = await client.post(endpoints.userCreate, backendUser);
+    return mapUserFromBackend(data.data || data);
   },
 
   updateUser: async (id: string, user: Partial<User>): Promise<User> => {
@@ -45,24 +77,25 @@ export const usersService = {
     if (user.fullName) backendUser.nameUsers = user.fullName;
     if (user.email) backendUser.emailUser = user.email;
     if (user.phone) backendUser.phoneUser = user.phone;
-    if (user.status) backendUser.estado = user.status;
+    if (user.status) backendUser.estado = mapStatusToBackend(user.status);
     
-    const { data } = await client.put(`${endpoints.users}/actualizar/${id}`, backendUser);
-    return mapUserFromBackend(data);
+    console.log('📤 Actualizando usuario:', backendUser);
+    const { data } = await client.put(endpoints.userUpdate(id), backendUser);
+    return mapUserFromBackend(data.data || data);
   },
 
   updateStatus: async (id: string, status: UserStatus): Promise<User> => {
-    const { data } = await client.put(`${endpoints.users}/cambiar-estado/${id}`, { 
-      estado: status 
+    const { data } = await client.put(endpoints.userChangeStatus(id), { 
+      estado: mapStatusToBackend(status)
     });
-    return mapUserFromBackend(data);
+    return mapUserFromBackend(data.data || data);
   },
 
   softDelete: async (id: string): Promise<void> => {
-    await client.delete(`${endpoints.users}/eliminar/${id}`);
+    await client.delete(endpoints.userDelete(id));
   },
 
   deleteUser: async (id: string): Promise<void> => {
-    await client.delete(`${endpoints.users}/eliminar/${id}`);
+    await client.delete(endpoints.userDelete(id));
   },
 };
