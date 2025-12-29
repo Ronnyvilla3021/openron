@@ -9,7 +9,7 @@ interface UsersListScreenProps {
 }
 
 export const UsersListScreen = ({ onSelectUser, onCreate, onEdit }: UsersListScreenProps) => {
-  const { users, loading } = useUsers();
+  const { users, loading } = useUsers(); // Esta línea debe estar DENTRO del componente
 
   if (loading) return <p className="p-6 text-neutral-500">Cargando usuarios...</p>;
 
@@ -17,7 +17,10 @@ export const UsersListScreen = ({ onSelectUser, onCreate, onEdit }: UsersListScr
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold">Gestión de Usuarios</h1>
-        <button onClick={onCreate} className="px-3 py-1 bg-primary-500 text-white rounded">
+        <button 
+          onClick={onCreate} 
+          className="px-3 py-1 bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors"
+        >
           Crear Usuario
         </button>
       </div>

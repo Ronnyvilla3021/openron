@@ -1,116 +1,52 @@
 // src/features/settings/services/settingsService.ts
+import client from "@/services/api/client/client";
+import { endpoints } from "@/services/api/endpoints/endpoints";
 import type { 
+  SettingsResponse, 
   IDCardConfig, 
-  NotificationsConfig, 
-  SettingsResponse 
-} from '../types/settings.types';
+  NotificationsConfig 
+} from "../types/settings.types";
 
-// Datos mock
-const mockSettings: SettingsResponse = {
-  idCard: {
-    fields: [
-      { id: '1', name: 'fullName', label: 'Nombre Completo', required: true, visible: true, order: 1 },
-      { id: '2', name: 'birthDate', label: 'Fecha de Nacimiento', required: true, visible: true, order: 2 },
-      { id: '3', name: 'documentNumber', label: 'Número de Documento', required: true, visible: true, order: 3 },
-      { id: '4', name: 'bloodType', label: 'Tipo de Sangre', required: false, visible: true, order: 4 },
-      { id: '5', name: 'allergies', label: 'Alergias', required: false, visible: true, order: 5 },
-      { id: '6', name: 'emergencyContact', label: 'Contacto de Emergencia', required: false, visible: true, order: 6 }
-    ],
-    qrConfig: {
-      includePhoto: true,
-      includeEmergencyContacts: true,
-      includeMedicalInfo: true,
-      includeBloodType: true,
-      includeAllergies: true,
-      expirationDays: 30
-    }
-  },
-  notifications: {
-    channels: [
-      { 
-        channel: 'push', 
-        enabled: true, 
-        types: {
-          route_start: true,
-          route_end: true,
-          safety_alert: true,
-          support_message: true,
-          emergency: true
-        }
-      },
-      { 
-        channel: 'email', 
-        enabled: true, 
-        types: {
-          route_start: true,
-          route_end: false,
-          safety_alert: true,
-          support_message: true,
-          emergency: true
-        }
-      },
-      { 
-        channel: 'sms', 
-        enabled: false, 
-        types: {
-          route_start: false,
-          route_end: false,
-          safety_alert: true,
-          support_message: false,
-          emergency: true
-        }
-      }
-    ],
-    templates: [
-      {
-        type: 'route_start',
-        subject: 'Tu ruta ha comenzado',
-        body: 'Hola {{userName}}, has iniciado tu ruta hacia {{destination}}. Tiempo estimado: {{estimatedTime}}.',
-        variables: ['userName', 'destination', 'estimatedTime']
-      },
-      {
-        type: 'route_end',
-        subject: 'Ruta finalizada',
-        body: 'Hola {{userName}}, has llegado a tu destino {{destination}} de forma segura.',
-        variables: ['userName', 'destination']
-      },
-      {
-        type: 'safety_alert',
-        subject: 'Alerta de seguridad',
-        body: 'Alerta: {{alertMessage}} en {{location}}. Por favor, toma precauciones.',
-        variables: ['alertMessage', 'location']
-      },
-      {
-        type: 'support_message',
-        subject: 'Mensaje de soporte',
-        body: 'Hola {{userName}}, el equipo de soporte te contacta sobre: {{issue}}.',
-        variables: ['userName', 'issue']
-      },
-      {
-        type: 'emergency',
-        subject: 'EMERGENCIA - Asistencia requerida',
-        body: 'EMERGENCIA: {{userName}} requiere asistencia inmediata en {{location}}. Contacto: {{emergencyContact}}.',
-        variables: ['userName', 'location', 'emergencyContact']
-      }
-    ],
-    legalText: 'Este mensaje es enviado por OpenBlind. Para dejar de recibir notificaciones, actualiza tus preferencias en la aplicación.'
-  }
-};
-
-// Servicio
 export const settingsService = {
-  getSettings: async (): Promise<SettingsResponse> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return mockSettings;
+  // Obtener todas las configuraciones
+  get: async (): Promise<SettingsResponse> => {
+    const { data } = await client.get(endpoints.settings);
+    return data;
   },
 
-  updateIDCardConfig: async (config: IDCardConfig): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('ID Card config updated:', config);
+  // Actualizar todas las configuraciones
+  update: async (settings: Partial<SettingsResponse>): Promise<SettingsResponse> => {
+    const { data } = await client.put(endpoints.settings, settings);
+    return data;
   },
 
-  updateNotificationsConfig: async (config: NotificationsConfig): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('Notifications config updated:', config);
-  }
+  // Actualizar solo configuración de ID Card (opcional - puedes agregarlo si lo necesitas)
+  updateIDCardConfig: async (config: IDCardConfig): Promise<SettingsResponse> => {
+    // Obtener configuraciones actuales
+    const currentSettings = await settingsService.get();
+    
+    // Actualizar solo la parte de ID Card
+    const updatedSettings: Partial<SettingsResponse> = {
+      ...currentSettings,
+      idCard: config,
+    };
+    
+    const { data } = await client.put(endpoints.settings, updatedSettings);
+    return data;
+  },
+
+  // Actualizar solo configuración de notificaciones (opcional)
+  updateNotificationsConfig: async (config: NotificationsConfig): Promise<SettingsResponse> => {
+    // Obtener configuraciones actuales
+    const currentSettings = await settingsService.get();
+    
+    // Actualizar solo la parte de notificaciones
+    const updatedSettings: Partial<SettingsResponse> = {
+      ...currentSettings,
+      notifications: config,
+    };
+    
+    const { data } = await client.put(endpoints.settings, updatedSettings);
+    return data;
+  },
 };

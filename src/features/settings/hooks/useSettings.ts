@@ -15,7 +15,7 @@ export const useSettings = () => {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const data = await settingsService.getSettings();
+      const data = await settingsService.get();
       setIdCardConfig(data.idCard);
       setNotificationsConfig(data.notifications);
       setError(null);

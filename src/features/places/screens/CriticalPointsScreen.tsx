@@ -1,6 +1,6 @@
 // src/features/places/screens/CriticalPointsScreen.tsx
 import { useState } from 'react';
-import { useZones } from '../hooks/useZones'; // Hook para manejar SafeZones y CriticalPoints
+import { useZones } from '../hooks/useZones';
 import { CriticalPointsTable } from '../components/CriticalPointsTable';
 import type { CriticalPoint } from '../types/place.types';
 import { Modal } from '../../../shared/components/modals/Modal';
@@ -20,13 +20,18 @@ export const CriticalPointsScreen = () => {
 
   if (loading) return <p className="p-6">Cargando puntos críticos...</p>;
 
-  const handleSave = (point: CriticalPoint) => {
-    if (criticalPoints.find((p) => p.id === point.id)) {
-      updateCriticalPoint(point);
+  const handleSave = (point: Omit<CriticalPoint, 'id' | 'createdAt'> | CriticalPoint) => {
+    // Si el punto tiene ID, es una actualización
+    if ('id' in point && point.id) {
+      // Extraer solo los campos que se pueden actualizar
+      const { id, createdAt, ...updateData } = point;
+      updateCriticalPoint(id, updateData);
     } else {
+      // Si no tiene ID, es una creación
       addCriticalPoint(point);
     }
     setModalOpen(false);
+    setSelectedPoint(null);
   };
 
   return (
@@ -49,7 +54,10 @@ export const CriticalPointsScreen = () => {
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <CriticalPointForm
           point={selectedPoint}
-          onCancel={() => setModalOpen(false)}
+          onCancel={() => {
+            setModalOpen(false);
+            setSelectedPoint(null);
+          }}
           onSave={handleSave}
         />
       </Modal>

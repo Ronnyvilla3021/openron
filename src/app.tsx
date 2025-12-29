@@ -14,7 +14,6 @@ import type { User } from './features/users/types/user.types';
 import { SafeZonesScreen } from './features/places/screens/SafeZonesScreen';
 import { CriticalPointsScreen } from './features/places/screens/CriticalPointsScreen';
 import { FavoritePlacesScreen } from './features/places/screens/FavoritePlacesScreen';
-import type { SafeZone } from './features/places/types/place.types';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<
@@ -24,9 +23,6 @@ function App() {
   // Usuarios
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-
-  // SafeZones
-  const [safeZones, setSafeZones] = useState<SafeZone[]>([]);
 
   return (
     <div className="flex min-h-screen bg-neutral-50 font-sans">

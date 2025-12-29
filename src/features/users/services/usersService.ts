@@ -1,44 +1,68 @@
 // src/features/users/services/usersService.ts
-import type { User } from '../types/user.types';
+import client from "@/services/api/client/client";
+import { endpoints } from "@/services/api/endpoints/endpoints";
+import type { User, UserStatus } from "../types/user.types";
 
-const mockUsers: User[] = [
-  {
-    id: '1',
-    fullName: 'Juan Pérez',
-    email: 'juan@example.com',
-    phone: '999888777',
-    status: 'active',
-    createdAt: '2025-09-01'
-  },
-  {
-    id: '2',
-    fullName: 'María López',
-    email: 'maria@example.com',
-    status: 'blocked',
-    createdAt: '2025-08-20'
-  },
-  {
-    id: '3',
-    fullName: 'Carlos Gómez',
-    email: 'carlos@example.com',
-    status: 'inactive',
-    createdAt: '2025-07-10'
-  }
-];
+// Mapear de frontend a backend
+const mapUserToBackend = (user: Omit<User, 'id' | 'createdAt'>) => ({
+  nameUsers: user.fullName,
+  emailUser: user.email,
+  phoneUser: user.phone || '',
+  userName: user.email.split('@')[0], // Generar username del email
+  passwordUser: 'Temporal123!', // Contraseña temporal - necesitarías manejar esto mejor
+  estado: user.status,
+});
+
+const mapUserFromBackend = (backendUser: any): User => ({
+  id: backendUser.id?.toString() || backendUser.idUsuario?.toString() || '',
+  fullName: backendUser.nameUsers || backendUser.nombre || '',
+  email: backendUser.emailUser || backendUser.email || '',
+  phone: backendUser.phoneUser || backendUser.telefono || '',
+  status: backendUser.estado || backendUser.status || 'active',
+  createdAt: backendUser.createdAt || backendUser.fechaCreacion || new Date().toISOString(),
+});
 
 export const usersService = {
-  getUsers: async (): Promise<User[]> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return mockUsers;
+  getAll: async (): Promise<User[]> => {
+    const { data } = await client.get(`${endpoints.users}/lista`);
+    // Mapear datos del backend al frontend
+    return Array.isArray(data) ? data.map(mapUserFromBackend) : [];
   },
 
-  updateUserStatus: async (id: string, status: User['status']) => {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    console.log(`User ${id} updated to ${status}`);
+  getById: async (id: string): Promise<User> => {
+    const { data } = await client.get(`${endpoints.users}/obtener/${id}`);
+    return mapUserFromBackend(data);
   },
 
-  softDeleteUser: async (id: string) => {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    console.log(`User ${id} soft deleted`);
-  }
+  createUser: async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+    const backendUser = mapUserToBackend(user);
+    const { data } = await client.post(`${endpoints.users}/crear`, backendUser);
+    return mapUserFromBackend(data);
+  },
+
+  updateUser: async (id: string, user: Partial<User>): Promise<User> => {
+    const backendUser: any = {};
+    if (user.fullName) backendUser.nameUsers = user.fullName;
+    if (user.email) backendUser.emailUser = user.email;
+    if (user.phone) backendUser.phoneUser = user.phone;
+    if (user.status) backendUser.estado = user.status;
+    
+    const { data } = await client.put(`${endpoints.users}/actualizar/${id}`, backendUser);
+    return mapUserFromBackend(data);
+  },
+
+  updateStatus: async (id: string, status: UserStatus): Promise<User> => {
+    const { data } = await client.put(`${endpoints.users}/cambiar-estado/${id}`, { 
+      estado: status 
+    });
+    return mapUserFromBackend(data);
+  },
+
+  softDelete: async (id: string): Promise<void> => {
+    await client.delete(`${endpoints.users}/eliminar/${id}`);
+  },
+
+  deleteUser: async (id: string): Promise<void> => {
+    await client.delete(`${endpoints.users}/eliminar/${id}`);
+  },
 };

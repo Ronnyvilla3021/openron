@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Props básicas para un botón de acción reutilizable
 type ActionButtonProps = {
   label: string;

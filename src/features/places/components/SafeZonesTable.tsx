@@ -1,43 +1,59 @@
 // src/features/places/components/SafeZonesTable.tsx
 import type { SafeZone } from '../types/place.types';
-import ActionButton from '../../../shared/components/buttons/ActionButton';
 
-interface Props {
+interface SafeZonesTableProps {
   zones: SafeZone[];
   onEdit: (zone: SafeZone) => void;
-  onDelete: (zone: SafeZone) => void;
+  onDeactivate: (id: string) => void;
 }
 
-const SafeZonesTable = ({ zones, onEdit, onDelete }: Props) => {
-  if (!zones.length) return <p>No hay zonas registradas.</p>;
+export const SafeZonesTable = ({ zones, onEdit, onDeactivate }: SafeZonesTableProps) => {
+  if (!zones || zones.length === 0) {
+    return <div>No hay zonas seguras registradas</div>;
+  }
 
   return (
-    <table className="w-full text-sm border">
+    <table className="min-w-full divide-y divide-gray-200">
       <thead>
-        <tr className="text-left border-b">
+        <tr>
           <th>Nombre</th>
           <th>Coordenadas</th>
-          <th>Radio (m)</th>
+          <th>Radio (metros)</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        {zones.map((zone) => (
-          <tr key={zone.id} className="border-b">
-            <td>{zone.name}</td>
-            <td>{`${zone.coordinates.lat.toFixed(5)}, ${zone.coordinates.lng.toFixed(5)}`}</td>
-            <td>{zone.radius}</td>
-            <td>{zone.status}</td>
-            <td className="flex gap-2">
-              <ActionButton label="Editar" onClick={() => onEdit(zone)} />
-              <ActionButton label="Eliminar" onClick={() => onDelete(zone)} />
-            </td>
-          </tr>
-        ))}
+        {zones.map((zone) => {
+          // Asegurar que radius existe y es un número
+          const radius = zone.radius ?? 100;
+          const radiusText = typeof radius === 'number' 
+            ? radius.toFixed(2) 
+            : '100.00'; // Valor por defecto si no es número
+          
+          return (
+            <tr key={zone.id}>
+              <td>{zone.name || 'Sin nombre'}</td>
+              <td>
+                {zone.coordinates 
+                  ? `Lat: ${zone.coordinates.lat?.toFixed(6) || '0'}, Lng: ${zone.coordinates.lng?.toFixed(6) || '0'}`
+                  : 'Sin coordenadas'
+                }
+              </td>
+              <td>{radiusText} m</td>
+              <td>
+                <span className={`px-2 py-1 rounded ${zone.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {zone.status === 'active' ? 'Activa' : 'Inactiva'}
+                </span>
+              </td>
+              <td>
+                <button onClick={() => onEdit(zone)}>Editar</button>
+                <button onClick={() => onDeactivate(zone.id)}>Desactivar</button>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 };
-
-export default SafeZonesTable;
